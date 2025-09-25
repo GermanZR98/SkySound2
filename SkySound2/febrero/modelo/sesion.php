@@ -1,16 +1,17 @@
 <?php 
 
-class sesion {
-
-
+class Sesion 
+{
     public function iniciar()
     {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
     }
 
     public function obtenerSesion()
     {
-        return $_SESION;
+        return $_SESSION;
     }
 
     public function get($key)

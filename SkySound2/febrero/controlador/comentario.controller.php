@@ -1,125 +1,147 @@
 <?php
 require_once "modelo/comentario.php";
+require_once "controlador/BaseController.php";
 
-class controllercomentario{
- 
-    public function __construct(){}
-
-    public function index(){
-
-        if(isset($_GET["idc"])): 
-
-        $datos = comentario::getAllcomentario($_GET["idc"]);
-        require_once "vista/index.comentario.php";
-
-        else:
-            header('Location:index.php?mod=cancion&ope=index');
-        endif;
+class ControllerComentario extends BaseController
+{
+    public function __construct()
+    {
+        parent::__construct();
     }
 
-    public function indexadmin(){
-
-        if(isset($_GET["idc"])): 
-
-        $datos = comentario::getAllcomentario($_GET["idc"]);
-        require_once "vista/index.comentarioadmin.php";
-
-        else:
-            header('Location:index.php?mod=cancion&ope=indexadmin');
-        endif;
+    public function index()
+    {
+        $this->requireLogin();
+        $this->handleIndex("index.comentario.php", "index.php?mod=cancion&ope=index");
     }
 
+    public function indexadmin()
+    {
+        $this->requireLogin();
+        if (!$this->isCurrentUserAdmin()) {
+            $this->redirect("index.php?mod=cancion&ope=index");
+        }
+        $this->handleIndex("index.comentarioadmin.php", "index.php?mod=cancion&ope=indexadmin");
+    }
 
     public function create()
     {
-        $idcancion = ($_GET["idc"]);
+        $this->requireLogin();
+        $idcancion = $this->getParameter("idc");
         
-        if(isset($_GET["com"])): 
+        if (!$idcancion) {
+            $this->redirectWithError(AppConstants::getMessage('FIELD_REQUIRED', ['field' => 'ID de canción']));
+        }
+        
+        $this->validateId($idcancion, "ID de canción");
+        
+        $comentarioText = $this->getParameter("com");
+        
+        if ($comentarioText) {
+            $nombre = $this->getRequiredParameter("nom");
+            
+            // Validate inputs
+            $this->validateMinLength($comentarioText, AppConstants::getValidationRule('MIN_COMMENT_LENGTH'), 'Comentario');
+            $this->validateMinLength($nombre, AppConstants::getValidationRule('MIN_NAME_LENGTH'), 'Nombre');
 
-        $comentario = new comentario();
-        $comentario->setComentario($_GET["com"]);
-        $comentario->setIdcancion($_GET["idc"]);
-        $comentario->setNombre($_GET["nom"]);
+            $comentario = new Comentario();
+            $comentario->setComentario($comentarioText);
+            $comentario->setIdcancion($idcancion);
+            $comentario->setNombre($nombre);
 
-
-        $comentario->insert();
-        header("Location:index.php?mod=comentario&ope=index&idc=$idcancion");
-
-        else:
-            require_once "vista/create.comentario.php";
-        endif;
-
-
+            $comentario->insert();
+            $this->redirect("index.php?mod=comentario&ope=index&idc=" . $idcancion);
+        } else {
+            $this->loadView("create.comentario.php", ['idcancion' => $idcancion]);
+        }
     }
 
-    public function delete(){
-
-        $idcancion = ($_GET["idc"]);
-
-		if (isset($_GET["idc"])) comentario::deleteComentario($_GET["idc"]) ;
-		
-		header('Location:index.php?mod=comentario&ope=index');
+    public function delete()
+    {
+        $this->requireLogin();
+        $id = $this->getParameter("idc");
+        
+        if ($id) {
+            $this->validateId($id, "ID de comentario");
+            Comentario::deleteComentario($id);
+        }
+        
+        $this->redirect("index.php?mod=comentario&ope=index");
     }
 
-    public function deleteadmin(){
-
-        $idcancion = ($_GET["idc"]);
-
-		if (isset($_GET["idc"])) comentario::deleteComentario($_GET["idc"]) ;
-		
-		header('Location:index.php?mod=comentario&ope=indexadmin');
+    public function deleteadmin()
+    {
+        $this->requireLogin();
+        if (!$this->isCurrentUserAdmin()) {
+            $this->redirect("index.php?mod=cancion&ope=index");
+        }
+        
+        $id = $this->getParameter("idc");
+        
+        if ($id) {
+            $this->validateId($id, "ID de comentario");
+            Comentario::deleteComentario($id);
+        }
+        
+        $this->redirect("index.php?mod=comentario&ope=indexadmin");
     }
     
-    public function update(){
-		$id = $_GET["idc"]??"";
-		
-		if (!empty($id)):
-
-            $tab = comentario::getComentarios($_GET["idc"]) ;
-
-            $idcancion = $tab->getIdcancion();
-
-			if (isset($_GET["com"])):
-                $tab->setComentario($_GET["com"]) ;
-                $tab->update();
-               // $this->index();
-            
-               header("Location:index.php?mod=comentario&ope=index&idc=$idcancion");
-				// 
-            else:
-                $comentario = $tab->getComentario();
-                $idcomentario = $tab->getIdcomentario();
-                require_once "vista/update.comentario.php";
-            endif;
-            else:
-           // $this->index();
-		endif;
+    public function update()
+    {
+        $this->requireLogin();
+        $this->handleUpdate("update.comentario.php", "index");
     }
     
-    public function updateadmin(){
-		$id = $_GET["idc"]??"";
-		
-		if (!empty($id)):
+    public function updateadmin()
+    {
+        $this->requireLogin();
+        if (!$this->isCurrentUserAdmin()) {
+            $this->redirect("index.php?mod=cancion&ope=index");
+        }
+        $this->handleUpdate("update.comentarioadmin.php", "indexadmin");
+    }
 
-            $tab = comentario::getComentarios($_GET["idc"]) ;
+    private function handleIndex($viewFile, $fallbackUrl)
+    {
+        $idcancion = $this->getParameter("idc");
+        
+        if ($idcancion) {
+            $datos = Comentario::getAllcomentario($idcancion);
+            $this->loadView($viewFile, ['datos' => $datos]);
+        } else {
+            $this->redirect($fallbackUrl);
+        }
+    }
 
-            $idcancion = $tab->getIdcancion();
-
-			if (isset($_GET["com"])):
-                $tab->setComentario($_GET["com"]) ;
-                $tab->update();
-               // $this->index();
+    private function handleUpdate($viewFile, $operation)
+    {
+        $id = $this->getParameter("idc");
+        
+        if (!empty($id)) {
+            $comentario = Comentario::getComentarios($id);
             
-               header("Location:index.php?mod=comentario&ope=indexadmin&idc=$idcancion");
-				// 
-            else:
-                $comentario = $tab->getComentario();
-                $idcomentario = $tab->getIdcomentario();
-                require_once "vista/update.comentarioadmin.php";
-            endif;
-            else:
-           // $this->index();
-		endif;
-	}
+            if (!$comentario) {
+                $this->redirectWithError(AppConstants::getMessage('COMMENT_NOT_FOUND'));
+            }
 
+            $idcancion = $comentario->getIdcancion();
+            $comentarioText = $this->getParameter("com");
+            
+            if ($comentarioText) {
+                // Validate inputs
+                $this->validateMinLength($comentarioText, AppConstants::getValidationRule('MIN_COMMENT_LENGTH'), 'Comentario');
+                
+                $comentario->setComentario($comentarioText);
+                $comentario->update();
+               
+                $this->redirect("index.php?mod=comentario&ope=$operation&idc=" . $idcancion);
+            } else {
+                $data = [
+                    'comentario' => $comentario->getComentario(),
+                    'idcomentario' => $comentario->getIdcomentario()
+                ];
+                $this->loadView($viewFile, $data);
+            }
+        }
+    }
 }

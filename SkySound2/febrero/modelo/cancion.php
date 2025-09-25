@@ -1,7 +1,8 @@
 <?php
 require_once "Database.php";
 
-class cancion {
+class Cancion 
+{
 
     private $idcancion ;
     private $artista ;
@@ -10,28 +11,23 @@ class cancion {
     private $genero ;
     private $album ;
 
-    //SETTERS
+    // SETTERS
+    public function setIdcancion($dta) { $this->idcancion = $dta; }
+    public function setArtista($dta) { $this->artista = $dta; }
+    public function setNcancion($dta) { $this->ncancion = $dta; }
+    public function setReproduccion($dta) { $this->reproduccion = $dta; }
+    public function setGenero($dta) { $this->genero = $dta; }
+    public function setAlbum($dta) { $this->album = $dta; }
 
-    public function setIdcancion($dta)        {$this->idcancion = $dta;}
-    public function setArtista($dta)          {$this->artista = $dta;}
-    public function setNcancion($dta)         {$this->ncancion = $dta;}
-    public function setReproduccion($dta)     {$this->reproduccion = $dta;}
-    public function setGenero($dta)           {$this->genero = $dta;}
-    public function setAlbum($dta)            {$this->album = $dta;}
+    // GETTERS
+    public function getIdcancion() { return $this->idcancion; }
+    public function getArtista() { return $this->artista; }
+    public function getNcancion() { return $this->ncancion; }
+    public function getReproduccion() { return $this->reproduccion; }
+    public function getGenero() { return $this->genero; }
+    public function getAlbum() { return $this->album; }
 
-
-    //GETTERS
-
-    public function getIdcancion()            {return $this->idcancion;}
-    public function getArtista()              {return $this->artista;}
-    public function getNcancion()             {return $this->ncancion;}
-    public function getReproduccion()         {return $this->reproduccion;}
-    public function getGenero()               {return $this->genero;}
-    public function getAlbum()                {return $this->album;}
-
-
-
-    public function __contruct() {}
+    public function __construct() {}
 
     //OBTENER TODAS LAS CANCIONES
 
@@ -41,7 +37,7 @@ class cancion {
         
         $datos = [];
 
-        while($item = $bd->getRow("cancion")){
+        while ($item = $bd->getRow("Cancion")) {
             array_push($datos,$item);
         }
 
@@ -92,7 +88,7 @@ class cancion {
         $db->query("SELECT * FROM canciones WHERE idcancion=:idc ;",
                      [":idc"=>$id]) ;
 
-        return $db->getRow("cancion") ;
+        return $db->getRow("Cancion");
     }
 
 

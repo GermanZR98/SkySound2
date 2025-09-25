@@ -1,16 +1,17 @@
 <?php  
-//iniciamos session
-$sesion=session_start();
-$nombre = $_SESSION["nombreusuario"];
+require_once "config/Config.php";
+require_once "utils/SessionManager.php";
 
-if ($nombre !== "admin"){
-	if (isset($nombre)) {
-		header("Location: index.php?mod=cancion&ope=index");
-	}
-}else{
-	if (isset($nombre)) {
-		header("Location: index.php?mod=cancion&ope=indexadmin");
-	}
+// Initialize session
+$sessionManager = SessionManager::getInstance();
+$nombre = $sessionManager->getUsername();
+
+if ($nombre) {
+    if (Config::isAdmin($nombre)) {
+        header("Location: index.php?mod=cancion&ope=indexadmin");
+    } else {
+        header("Location: index.php?mod=cancion&ope=index");
+    }
 }
 ?>
 

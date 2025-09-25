@@ -1,52 +1,62 @@
 <?php
 
-require_once "modelo/usuario.php" ;
-require_once "modelo/sesion.php" ;
+require_once "modelo/usuario.php";
+require_once "modelo/sesion.php";
+require_once "controlador/BaseController.php";
 
-    class controllerUsuario{
+class ControllerUsuario extends BaseController
+{
+    private $sesion;
 
-        private $sesion;
-
-        public function __construct(){
-            $this->sesion = new Sesion() ;
+    public function __construct()
+    {
+        parent::__construct();
+        $this->sesion = new Sesion();
+    }
+    
+    public function index()
+    {            
+        if ($this->isLoggedIn()) {
+            if ($this->isCurrentUserAdmin()) {
+                $this->redirect("index.php?mod=cancion&ope=indexadmin");
+            } else {
+                $this->redirect("index.php?mod=cancion&ope=index");
+            }
         }
         
-            public function index(){            
-                
-                if(isset($_SESSION["nombreusuario"])){
-                    header("Location: index.php?mod=cancion&ope=index");
-                }
-                
-                if($_SERVER["REQUEST_METHOD"] == "GET") {
-    
-                   usuario::comprobar();
-   
-                }
-            }
-
-            
-
-            public function cerrarSesion(){
-                session_start();
-                session_unset();
-                session_destroy();
-                header("Location: index.php") ;
-            }
-
-
-
-        public function create()
-        {
-            if(isset($_GET["cor"])):
-                $usuario = new Usuario();
-                $usuario->setCorreo($_GET["cor"]) ;
-                $usuario->setContrasena($_GET["con"]) ;
-                $usuario->setNombreusario($_GET["nom"]) ;
-
-                $usuario->insert() ;
-                header("location: index.php?mod=usuario&ope=index") ;
-            else:
-                require_once "vista/create.usuario.php" ;
-            endif;
+        if ($_SERVER["REQUEST_METHOD"] == "GET") {
+            Usuario::comprobar();
         }
     }
+
+    public function cerrarSesion()
+    {
+        $this->sessionManager->logout();
+        $this->redirect("index.php");
+    }
+
+    public function create()
+    {
+        $correo = $this->getParameter("cor");
+        
+        if ($correo) {
+            $contrasena = $this->getRequiredParameter("con");
+            $nombre = $this->getRequiredParameter("nom");
+            
+            // Validate inputs
+            $this->validateEmail($correo);
+            $this->validateMinLength($contrasena, AppConstants::getValidationRule('MIN_PASSWORD_LENGTH'), 'Contraseña');
+            $this->validateMinLength($nombre, AppConstants::getValidationRule('MIN_USERNAME_LENGTH'), 'Nombre');
+
+            $usuario = new Usuario();
+            $usuario->setCorreo($correo);
+            $usuario->setContrasena($contrasena);
+            $usuario->setNombreusario($nombre);
+
+            $usuario->insert();
+            $this->redirect("index.php?mod=usuario&ope=index");
+        } else {
+            $this->loadView("create.usuario.php");
+        }
+    }
+}

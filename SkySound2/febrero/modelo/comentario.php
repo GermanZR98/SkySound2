@@ -1,26 +1,26 @@
 <?php
 require_once "Database.php";
 
-class comentario { 
+class Comentario 
+{
 
     private $idcomentario;
     private $comentario;
     private $idcancion;
     private $nombre;
 
-    //SETTERS
-    public function setComentario($dta)        {$this->comentario = $dta;}
-    public function setIdcancion($dta)        {$this->idcancion = $dta;}
-    public function setNombre($dta)        {$this->nombre = $dta;}
+    // SETTERS
+    public function setComentario($dta) { $this->comentario = $dta; }
+    public function setIdcancion($dta) { $this->idcancion = $dta; }
+    public function setNombre($dta) { $this->nombre = $dta; }
 
+    // GETTERS
+    public function getIdcomentario() { return $this->idcomentario; }
+    public function getComentario() { return $this->comentario; }
+    public function getIdcancion() { return $this->idcancion; }
+    public function getNombre() { return $this->nombre; }
 
-    //GETTERS
-    public function getIdcomentario()            {return $this->idcomentario;}
-    public function getComentario()              {return $this->comentario;}
-    public function getIdcancion()               {return $this->idcancion;}
-    public function getNombre()                  {return $this->nombre;}
-
-    public function __contruct() {}
+    public function __construct() {}
 
     //OBTENER TODAS LAS CANCIONES
 
@@ -31,7 +31,7 @@ class comentario {
         
         $datos = [];
 
-        while($item = $bd->getRow("comentario")){
+        while ($item = $bd->getRow("Comentario")) {
             array_push($datos,$item);
         }
 
@@ -81,7 +81,7 @@ class comentario {
         $db->query("SELECT * FROM comentario WHERE idcomentario=:idco ;",
                      [":idco"=>$id]) ;
 
-        return $db->getRow("comentario") ;
+        return $db->getRow("Comentario");
     }
 }
 

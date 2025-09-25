@@ -1,109 +1,150 @@
 <?php
 require_once "modelo/cancion.php";
+require_once "controlador/BaseController.php";
 
-class controllercancion{
-
-    public function __construct(){}
-
-    public function index(){
-
-        $datos = cancion::getAllCanciones();
-        require_once "vista/index.cancion.php";
+class ControllerCancion extends BaseController
+{
+    public function __construct()
+    {
+        parent::__construct();
     }
 
-    public function indexadmin(){
+    public function index()
+    {
+        $this->requireLogin();
+        $datos = Cancion::getAllCanciones();
+        $this->loadView("index.cancion.php", ['datos' => $datos]);
+    }
 
-        $datos = cancion::getAllCanciones();
-        require_once "vista/index.cancionadmin.php";
+    public function indexadmin()
+    {
+        $this->requireLogin();
+        if (!$this->isCurrentUserAdmin()) {
+            $this->redirect("index.php?mod=cancion&ope=index");
+        }
+        $datos = Cancion::getAllCanciones();
+        $this->loadView("index.cancionadmin.php", ['datos' => $datos]);
     }
 
     public function create()
     {
-         if(isset($_GET["art"])): 
+        $this->requireLogin();
+        
+        $artista = $this->getParameter("art");
+        
+        if ($artista) {
+            $ncancion = $this->getRequiredParameter("nca");
+            $genero = $this->getRequiredParameter("gen");
+            $album = $this->getRequiredParameter("alb");
 
-        $cancion = new cancion();
-        $cancion->setArtista($_GET["art"]);
-        $cancion->setNcancion($_GET["nca"]);
-        $cancion->setGenero($_GET["gen"]);
-        $cancion->setAlbum($_GET["alb"]);
+            // Validate inputs
+            $this->validateMinLength($artista, AppConstants::getValidationRule('MIN_ARTIST_LENGTH'), 'Artista');
+            $this->validateMinLength($ncancion, AppConstants::getValidationRule('MIN_SONG_NAME_LENGTH'), 'Nombre de canción');
 
+            $cancion = new Cancion();
+            $cancion->setArtista($artista);
+            $cancion->setNcancion($ncancion);
+            $cancion->setGenero($genero);
+            $cancion->setAlbum($album);
 
-        $cancion->insert();
-        header('Location:index.php?mod=cancion&ope=index');
-
-         else:
-             require_once "vista/create.cancion.php";
-         endif;
-
-
+            $cancion->insert();
+            $this->redirectToIndex();
+        } else {
+            $this->loadView("create.cancion.php");
+        }
     }
 
-    public function delete(){
-
-		if (isset($_GET["idc"])) cancion::deleteCancion($_GET["idc"]) ;
-		
-		header('Location:index.php?mod=cancion&ope=index');
+    public function delete()
+    {
+        $this->requireLogin();
+        $id = $this->getParameter("idc");
+        
+        if ($id) {
+            $this->validateId($id, "ID de canción");
+            Cancion::deleteCancion($id);
+        }
+        
+        $this->redirectToIndex();
     }
 
-    public function deleteadmin(){
-
-		if (isset($_GET["idc"])) cancion::deleteCancion($_GET["idc"]) ;
-		
-		header('Location:index.php?mod=cancion&ope=indexadmin');
-    }
-    
-    public function update(){
-		$id = $_GET["idc"]??"";
-		
-		if (!empty($id)):
-
-            $tab = cancion::getCancion($_GET["idc"]) ;
-
-			if (isset($_GET["nca"])):
-                $tab->setNcancion($_GET["nca"]) ;
-                $tab->setGenero($_GET["gen"]) ;
-                $tab->setAlbum($_GET["alb"]) ;
-
-                $tab->update();
-                $this->index();
-				// 
-			else:
-                $nombre = $tab->getNcancion();
-                $idcancion = $tab->getIdcancion();
-                $genero = $tab->getGenero();
-                $album = $tab->getAlbum();
-                require_once "vista/update.cancion.php";
-            endif;
-            else:
-           // $this->index();
-		endif;
+    public function deleteadmin()
+    {
+        $this->requireLogin();
+        if (!$this->isCurrentUserAdmin()) {
+            $this->redirect("index.php?mod=cancion&ope=index");
+        }
+        
+        $id = $this->getParameter("idc");
+        
+        if ($id) {
+            $this->validateId($id, "ID de canción");
+            Cancion::deleteCancion($id);
+        }
+        
+        $this->redirect("index.php?mod=cancion&ope=indexadmin");
     }
     
-    public function updateadmin(){
-		$id = $_GET["idc"]??"";
-		
-		if (!empty($id)):
+    public function update()
+    {
+        $this->requireLogin();
+        $this->handleUpdate("update.cancion.php", "index.php?mod=cancion&ope=index");
+    }
+    
+    public function updateadmin()
+    {
+        $this->requireLogin();
+        if (!$this->isCurrentUserAdmin()) {
+            $this->redirect("index.php?mod=cancion&ope=index");
+        }
+        $this->handleUpdate("update.cancionadmin.php", "index.php?mod=cancion&ope=indexadmin");
+    }
 
-            $tab = cancion::getCancion($_GET["idc"]) ;
+    private function handleUpdate($viewFile, $redirectUrl)
+    {
+        $id = $this->getParameter("idc");
+        
+        if (!empty($id)) {
+            $cancion = Cancion::getCancion($id);
+            
+            if (!$cancion) {
+                $this->redirectWithError(AppConstants::getMessage('SONG_NOT_FOUND'));
+            }
 
-			if (isset($_GET["nca"])):
-                $tab->setNcancion($_GET["nca"]) ;
-                $tab->setGenero($_GET["gen"]) ;
-                $tab->setAlbum($_GET["alb"]) ;
+            $ncancion = $this->getParameter("nca");
+            
+            if ($ncancion) {
+                $genero = $this->getRequiredParameter("gen");
+                $album = $this->getRequiredParameter("alb");
+                
+                // Validate inputs
+                $this->validateMinLength($ncancion, AppConstants::getValidationRule('MIN_SONG_NAME_LENGTH'), 'Nombre de canción');
+                
+                $cancion->setNcancion($ncancion);
+                $cancion->setGenero($genero);
+                $cancion->setAlbum($album);
 
-                $tab->update();
-                $this->indexadmin();
-				// 
-			else:
-                $nombre = $tab->getNcancion();
-                $idcancion = $tab->getIdcancion();
-                $genero = $tab->getGenero();
-                $album = $tab->getAlbum();
-                require_once "vista/update.cancionadmin.php";
-            endif;
-            else:
-           // $this->index();
-		endif;
-	}
+                $cancion->update();
+                $this->redirect($redirectUrl);
+            } else {
+                $data = [
+                    'nombre' => $cancion->getNcancion(),
+                    'idcancion' => $cancion->getIdcancion(),
+                    'genero' => $cancion->getGenero(),
+                    'album' => $cancion->getAlbum()
+                ];
+                $this->loadView($viewFile, $data);
+            }
+        } else {
+            $this->redirect($redirectUrl);
+        }
+    }
 
+    private function redirectToIndex()
+    {
+        if ($this->isCurrentUserAdmin()) {
+            $this->redirect("index.php?mod=cancion&ope=indexadmin");
+        } else {
+            $this->redirect("index.php?mod=cancion&ope=index");
+        }
+    }
 }
