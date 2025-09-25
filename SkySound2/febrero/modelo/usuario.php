@@ -2,6 +2,7 @@
 require_once "Database.php";
 require_once "sesion.php";
 require_once "config/Config.php";
+require_once "utils/SessionManager.php";
 
 
 class Usuario 
@@ -56,7 +57,7 @@ class Usuario
             $db->query("SELECT * FROM usuario WHERE nombreusuario=:nom;", [":nom" => $nombre]);
             $resultado = $db->getRow();
             
-            session_start();
+            $sessionManager = SessionManager::getInstance();
            
             if ($resultado !== false) {
                 // Check if password is hashed or plain text (for backward compatibility)
@@ -77,7 +78,7 @@ class Usuario
                 }
                 
                 if ($isValidPassword) {
-                    $_SESSION[Config::SESSION_NAME] = $nombre;
+                    $sessionManager->login($nombre);
                     if (Config::isAdmin($nombre)) {
                         header("Location: index.php?mod=cancion&ope=indexadmin");
                     } else {

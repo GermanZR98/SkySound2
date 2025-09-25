@@ -10,13 +10,12 @@ class ControllerUsuario extends BaseController
 
     public function __construct()
     {
+        parent::__construct();
         $this->sesion = new Sesion();
     }
     
     public function index()
     {            
-        $this->initSession();
-        
         if ($this->isLoggedIn()) {
             if ($this->isCurrentUserAdmin()) {
                 $this->redirect("index.php?mod=cancion&ope=indexadmin");
@@ -32,9 +31,7 @@ class ControllerUsuario extends BaseController
 
     public function cerrarSesion()
     {
-        $this->initSession();
-        session_unset();
-        session_destroy();
+        $this->sessionManager->logout();
         $this->redirect("index.php");
     }
 

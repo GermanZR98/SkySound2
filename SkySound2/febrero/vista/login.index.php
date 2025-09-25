@@ -1,9 +1,10 @@
 <?php  
 require_once "config/Config.php";
+require_once "utils/SessionManager.php";
 
 // Initialize session
-session_start();
-$nombre = $_SESSION[Config::SESSION_NAME] ?? null;
+$sessionManager = SessionManager::getInstance();
+$nombre = $sessionManager->getUsername();
 
 if ($nombre) {
     if (Config::isAdmin($nombre)) {

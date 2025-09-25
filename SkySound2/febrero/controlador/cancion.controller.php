@@ -6,7 +6,7 @@ class ControllerCancion extends BaseController
 {
     public function __construct()
     {
-        $this->initSession();
+        parent::__construct();
     }
 
     public function index()

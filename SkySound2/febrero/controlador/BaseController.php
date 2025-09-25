@@ -3,6 +3,7 @@
 require_once "config/Config.php";
 require_once "utils/InputValidator.php";
 require_once "utils/ErrorHandler.php";
+require_once "utils/SessionManager.php";
 
 /**
  * Base controller class
@@ -10,6 +11,12 @@ require_once "utils/ErrorHandler.php";
  */
 abstract class BaseController
 {
+    protected $sessionManager;
+
+    public function __construct()
+    {
+        $this->sessionManager = SessionManager::getInstance();
+    }
     /**
      * Validate and sanitize GET parameters
      */
@@ -63,7 +70,7 @@ abstract class BaseController
      */
     protected function isLoggedIn()
     {
-        return isset($_SESSION[Config::SESSION_NAME]);
+        return $this->sessionManager->isLoggedIn();
     }
 
     /**
@@ -71,10 +78,7 @@ abstract class BaseController
      */
     protected function isCurrentUserAdmin()
     {
-        if (!$this->isLoggedIn()) {
-            return false;
-        }
-        return Config::isAdmin($_SESSION[Config::SESSION_NAME]);
+        return $this->sessionManager->isAdmin();
     }
 
     /**
@@ -82,7 +86,7 @@ abstract class BaseController
      */
     protected function getCurrentUsername()
     {
-        return $_SESSION[Config::SESSION_NAME] ?? null;
+        return $this->sessionManager->getUsername();
     }
 
     /**
@@ -100,9 +104,26 @@ abstract class BaseController
      */
     protected function initSession()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        // Session is already managed by SessionManager in constructor
+    }
+
+    /**
+     * Validate CSRF token for forms
+     */
+    protected function validateCSRF()
+    {
+        $token = $this->getParameter('csrf_token');
+        if (!$this->sessionManager->validateCSRFToken($token)) {
+            $this->redirectWithError("Token de seguridad inválido. Por favor, recarga la página e inténtalo de nuevo.");
         }
+    }
+
+    /**
+     * Get CSRF token for forms
+     */
+    protected function getCSRFToken()
+    {
+        return $this->sessionManager->getCSRFToken();
     }
 
     /**
