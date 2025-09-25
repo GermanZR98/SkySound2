@@ -1,21 +1,39 @@
 <?php
 
-ini_set("display_errors", 1) ;
-ini_set("display_startup_errors", 1) ;
-error_reporting(E_ALL) ;
+require_once "config/Config.php";
 
-$mod = $_GET["mod"]??"usuario";
-$ope = $_GET["ope"]??"index";
+// Initialize application configuration
+Config::init();
 
-require_once "controlador/$mod.controller.php";
+$mod = $_GET["mod"] ?? Config::DEFAULT_MODULE;
+$ope = $_GET["ope"] ?? Config::DEFAULT_OPERATION;
 
-$nme = "controller$mod";
+// Validate module and operation to prevent directory traversal
+if (!preg_match('/^[a-zA-Z]+$/', $mod) || !preg_match('/^[a-zA-Z]+$/', $ope)) {
+    die("Error: Invalid parameters");
+}
 
-$cont = new $nme();
+$controllerFile = "controlador/$mod.controller.php";
 
-if(method_exists($cont,$ope))
-         $cont->$ope();
-    else
-        die("Error");
+if (!file_exists($controllerFile)) {
+    die("Error: Controller not found");
+}
+
+require_once $controllerFile;
+
+// Convert to proper class name (first letter uppercase)
+$className = "Controller" . ucfirst($mod);
+
+if (!class_exists($className)) {
+    die("Error: Controller class not found");
+}
+
+$controller = new $className();
+
+if (method_exists($controller, $ope)) {
+    $controller->$ope();
+} else {
+    die("Error: Operation not found");
+}
 
 ?>
