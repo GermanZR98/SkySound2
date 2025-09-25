@@ -1,6 +1,7 @@
 <?php
 
 require_once "config/Config.php";
+require_once "config/AppConstants.php";
 require_once "utils/InputValidator.php";
 require_once "utils/ErrorHandler.php";
 require_once "utils/SessionManager.php";
@@ -114,7 +115,7 @@ abstract class BaseController
     {
         $token = $this->getParameter('csrf_token');
         if (!$this->sessionManager->validateCSRFToken($token)) {
-            $this->redirectWithError("Token de seguridad inválido. Por favor, recarga la página e inténtalo de nuevo.");
+            $this->redirectWithError(AppConstants::getMessage('CSRF_TOKEN_INVALID'));
         }
     }
 
@@ -132,17 +133,18 @@ abstract class BaseController
     protected function validateMinLength($value, $min, $fieldName)
     {
         if (!InputValidator::validateLength($value, $min)) {
-            $this->redirectWithError("$fieldName debe tener al menos $min caracteres");
+            $message = AppConstants::getMessage('FIELD_TOO_SHORT', ['field' => $fieldName, 'min' => $min]);
+            $this->redirectWithError($message);
         }
     }
 
     /**
      * Validate email
      */
-    protected function validateEmail($email, $fieldName = "Email")
+    protected function validateEmail($email, $fieldName = null)
     {
         if (!InputValidator::validateEmail($email)) {
-            $this->redirectWithError("$fieldName inválido");
+            $this->redirectWithError(AppConstants::getMessage('EMAIL_INVALID'));
         }
     }
 
@@ -152,7 +154,8 @@ abstract class BaseController
     protected function validateId($id, $fieldName = "ID")
     {
         if (!InputValidator::validateId($id)) {
-            $this->redirectWithError("$fieldName inválido");
+            $message = AppConstants::getMessage('ID_INVALID', ['field' => $fieldName]);
+            $this->redirectWithError($message);
         }
         return intval($id);
     }

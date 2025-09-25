@@ -38,8 +38,8 @@ class ControllerCancion extends BaseController
             $album = $this->getRequiredParameter("alb");
 
             // Validate inputs
-            $this->validateMinLength($artista, 2, "Artista");
-            $this->validateMinLength($ncancion, 2, "Nombre de canción");
+            $this->validateMinLength($artista, AppConstants::getValidationRule('MIN_ARTIST_LENGTH'), 'Artista');
+            $this->validateMinLength($ncancion, AppConstants::getValidationRule('MIN_SONG_NAME_LENGTH'), 'Nombre de canción');
 
             $cancion = new Cancion();
             $cancion->setArtista($artista);
@@ -107,7 +107,7 @@ class ControllerCancion extends BaseController
             $cancion = Cancion::getCancion($id);
             
             if (!$cancion) {
-                $this->redirectWithError("Canción no encontrada");
+                $this->redirectWithError(AppConstants::getMessage('SONG_NOT_FOUND'));
             }
 
             $ncancion = $this->getParameter("nca");
@@ -117,7 +117,7 @@ class ControllerCancion extends BaseController
                 $album = $this->getRequiredParameter("alb");
                 
                 // Validate inputs
-                $this->validateMinLength($ncancion, 2, "Nombre de canción");
+                $this->validateMinLength($ncancion, AppConstants::getValidationRule('MIN_SONG_NAME_LENGTH'), 'Nombre de canción');
                 
                 $cancion->setNcancion($ncancion);
                 $cancion->setGenero($genero);

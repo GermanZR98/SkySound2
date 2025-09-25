@@ -44,9 +44,9 @@ class ControllerUsuario extends BaseController
             $nombre = $this->getRequiredParameter("nom");
             
             // Validate inputs
-            $this->validateEmail($correo, "Correo");
-            $this->validateMinLength($contrasena, 3, "Contraseña");
-            $this->validateMinLength($nombre, 2, "Nombre");
+            $this->validateEmail($correo);
+            $this->validateMinLength($contrasena, AppConstants::getValidationRule('MIN_PASSWORD_LENGTH'), 'Contraseña');
+            $this->validateMinLength($nombre, AppConstants::getValidationRule('MIN_USERNAME_LENGTH'), 'Nombre');
 
             $usuario = new Usuario();
             $usuario->setCorreo($correo);

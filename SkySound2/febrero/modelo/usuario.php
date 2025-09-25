@@ -2,6 +2,7 @@
 require_once "Database.php";
 require_once "sesion.php";
 require_once "config/Config.php";
+require_once "config/AppConstants.php";
 require_once "utils/SessionManager.php";
 
 
@@ -86,11 +87,11 @@ class Usuario
                     }
                 } else {
                     require_once "vista/login.index.php";
-                    echo "El nombre o la contraseña no es correcta";
+                    echo AppConstants::getMessage('LOGIN_FAILED');
                 }
             } else {
                 require_once "vista/login.index.php";
-                echo "El nombre o la contraseña no es correcta";
+                echo AppConstants::getMessage('LOGIN_FAILED');
             }
         } else {
             require_once "vista/login.index.php";

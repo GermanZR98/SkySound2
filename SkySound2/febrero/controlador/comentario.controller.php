@@ -30,7 +30,7 @@ class ControllerComentario extends BaseController
         $idcancion = $this->getParameter("idc");
         
         if (!$idcancion) {
-            $this->redirectWithError("ID de canción requerido");
+            $this->redirectWithError(AppConstants::getMessage('FIELD_REQUIRED', ['field' => 'ID de canción']));
         }
         
         $this->validateId($idcancion, "ID de canción");
@@ -41,8 +41,8 @@ class ControllerComentario extends BaseController
             $nombre = $this->getRequiredParameter("nom");
             
             // Validate inputs
-            $this->validateMinLength($comentarioText, 2, "Comentario");
-            $this->validateMinLength($nombre, 2, "Nombre");
+            $this->validateMinLength($comentarioText, AppConstants::getValidationRule('MIN_COMMENT_LENGTH'), 'Comentario');
+            $this->validateMinLength($nombre, AppConstants::getValidationRule('MIN_NAME_LENGTH'), 'Nombre');
 
             $comentario = new Comentario();
             $comentario->setComentario($comentarioText);
@@ -121,7 +121,7 @@ class ControllerComentario extends BaseController
             $comentario = Comentario::getComentarios($id);
             
             if (!$comentario) {
-                $this->redirectWithError("Comentario no encontrado");
+                $this->redirectWithError(AppConstants::getMessage('COMMENT_NOT_FOUND'));
             }
 
             $idcancion = $comentario->getIdcancion();
@@ -129,7 +129,7 @@ class ControllerComentario extends BaseController
             
             if ($comentarioText) {
                 // Validate inputs
-                $this->validateMinLength($comentarioText, 2, "Comentario");
+                $this->validateMinLength($comentarioText, AppConstants::getValidationRule('MIN_COMMENT_LENGTH'), 'Comentario');
                 
                 $comentario->setComentario($comentarioText);
                 $comentario->update();
