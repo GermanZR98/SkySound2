@@ -28,6 +28,22 @@ class Usuario
 
     public function __construct() {}
 
+    /**
+     * Hash password for storage
+     */
+    private function hashPassword($password)
+    {
+        return password_hash($password, PASSWORD_DEFAULT);
+    }
+
+    /**
+     * Verify password against hash
+     */
+    private static function verifyPassword($password, $hash)
+    {
+        return password_verify($password, $hash);
+    }
+
     public static function comprobar()
     {                                      
         if (isset($_GET["nom"]) && isset($_GET["con"])) {
@@ -36,20 +52,40 @@ class Usuario
        
             $db = Database::getInstance();
 
-            $db->query("SELECT * FROM usuario WHERE nombreusuario=:nom AND contrasena=:con;",
-                            [":nom" => $nombre,
-                             ":con" => $password]);
-                             
+            // First try to get user data
+            $db->query("SELECT * FROM usuario WHERE nombreusuario=:nom;", [":nom" => $nombre]);
             $resultado = $db->getRow();
+            
             session_start();
            
             if ($resultado !== false) {
-                if (Config::isAdmin($nombre)) {
+                // Check if password is hashed or plain text (for backward compatibility)
+                $isValidPassword = false;
+                
+                // Check for admin with plain text password (temporary for compatibility)
+                if (Config::isAdmin($nombre) && $password === Config::ADMIN_PASSWORD) {
+                    $isValidPassword = true;
+                }
+                // Check if stored password looks like a hash
+                elseif (strlen($resultado->contrasena) > 50 && password_verify($password, $resultado->contrasena)) {
+                    $isValidPassword = true;
+                }
+                // Fallback to plain text comparison (for existing users)
+                elseif ($password === $resultado->contrasena) {
+                    $isValidPassword = true;
+                    // TODO: Update to hashed password on next login
+                }
+                
+                if ($isValidPassword) {
                     $_SESSION[Config::SESSION_NAME] = $nombre;
-                    header("Location: index.php?mod=cancion&ope=indexadmin");
+                    if (Config::isAdmin($nombre)) {
+                        header("Location: index.php?mod=cancion&ope=indexadmin");
+                    } else {
+                        header("Location: index.php?mod=cancion&ope=index");
+                    }
                 } else {
-                    $_SESSION[Config::SESSION_NAME] = $nombre;
-                    header("Location: index.php?mod=cancion&ope=index");
+                    require_once "vista/login.index.php";
+                    echo "El nombre o la contraseña no es correcta";
                 }
             } else {
                 require_once "vista/login.index.php";
@@ -64,9 +100,10 @@ class Usuario
     public function insert()
     {
         $bd = Database::getInstance();
+        $hashedPassword = $this->hashPassword($this->contrasena);
         $bd->query("INSERT INTO usuario(correo, contrasena, nombreusuario) VALUES (:cor, :con, :nom);",
             [":cor" => $this->correo,
-             ":con" => $this->contrasena,
+             ":con" => $hashedPassword,
              ":nom" => $this->nombreusuario]);
     }
     

@@ -46,18 +46,10 @@ class ControllerUsuario extends BaseController
             $contrasena = $this->getRequiredParameter("con");
             $nombre = $this->getRequiredParameter("nom");
             
-            // Basic validation
-            if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-                $this->redirectWithError("Email inválido");
-            }
-            
-            if (strlen($contrasena) < 3) {
-                $this->redirectWithError("La contraseña debe tener al menos 3 caracteres");
-            }
-            
-            if (strlen($nombre) < 2) {
-                $this->redirectWithError("El nombre debe tener al menos 2 caracteres");
-            }
+            // Validate inputs
+            $this->validateEmail($correo, "Correo");
+            $this->validateMinLength($contrasena, 3, "Contraseña");
+            $this->validateMinLength($nombre, 2, "Nombre");
 
             $usuario = new Usuario();
             $usuario->setCorreo($correo);

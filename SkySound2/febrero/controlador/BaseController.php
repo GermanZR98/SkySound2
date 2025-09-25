@@ -1,6 +1,8 @@
 <?php
 
 require_once "config/Config.php";
+require_once "utils/InputValidator.php";
+require_once "utils/ErrorHandler.php";
 
 /**
  * Base controller class
@@ -13,11 +15,7 @@ abstract class BaseController
      */
     protected function getParameter($key, $default = null)
     {
-        if (!isset($_GET[$key])) {
-            return $default;
-        }
-        
-        return filter_var($_GET[$key], FILTER_SANITIZE_STRING);
+        return InputValidator::getCleanParam($key, $default);
     }
 
     /**
@@ -25,11 +23,11 @@ abstract class BaseController
      */
     protected function getRequiredParameter($key)
     {
-        $value = $this->getParameter($key);
-        if ($value === null || $value === '') {
-            $this->redirectWithError("Missing required parameter: $key");
+        try {
+            return InputValidator::getRequiredParam($key);
+        } catch (InvalidArgumentException $e) {
+            $this->redirectWithError($e->getMessage());
         }
-        return $value;
     }
 
     /**
@@ -46,8 +44,8 @@ abstract class BaseController
      */
     protected function redirectWithError($error)
     {
-        // For now, just die with error - could be enhanced to show error pages
-        die("Error: " . htmlspecialchars($error));
+        ErrorHandler::logError($error, ['user' => $this->getCurrentUsername(), 'url' => $_SERVER['REQUEST_URI'] ?? '']);
+        ErrorHandler::showErrorPage($error, 400);
     }
 
     /**
@@ -105,5 +103,36 @@ abstract class BaseController
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+    }
+
+    /**
+     * Validate string with minimum length
+     */
+    protected function validateMinLength($value, $min, $fieldName)
+    {
+        if (!InputValidator::validateLength($value, $min)) {
+            $this->redirectWithError("$fieldName debe tener al menos $min caracteres");
+        }
+    }
+
+    /**
+     * Validate email
+     */
+    protected function validateEmail($email, $fieldName = "Email")
+    {
+        if (!InputValidator::validateEmail($email)) {
+            $this->redirectWithError("$fieldName inválido");
+        }
+    }
+
+    /**
+     * Validate numeric ID
+     */
+    protected function validateId($id, $fieldName = "ID")
+    {
+        if (!InputValidator::validateId($id)) {
+            $this->redirectWithError("$fieldName inválido");
+        }
+        return intval($id);
     }
 }

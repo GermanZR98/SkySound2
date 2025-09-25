@@ -37,13 +37,9 @@ class ControllerCancion extends BaseController
             $genero = $this->getRequiredParameter("gen");
             $album = $this->getRequiredParameter("alb");
 
-            // Basic validation
-            if (strlen(trim($artista)) < 2) {
-                $this->redirectWithError("El artista debe tener al menos 2 caracteres");
-            }
-            if (strlen(trim($ncancion)) < 2) {
-                $this->redirectWithError("El nombre de la canción debe tener al menos 2 caracteres");
-            }
+            // Validate inputs
+            $this->validateMinLength($artista, 2, "Artista");
+            $this->validateMinLength($ncancion, 2, "Nombre de canción");
 
             $cancion = new Cancion();
             $cancion->setArtista($artista);
@@ -64,6 +60,7 @@ class ControllerCancion extends BaseController
         $id = $this->getParameter("idc");
         
         if ($id) {
+            $this->validateId($id, "ID de canción");
             Cancion::deleteCancion($id);
         }
         
@@ -80,6 +77,7 @@ class ControllerCancion extends BaseController
         $id = $this->getParameter("idc");
         
         if ($id) {
+            $this->validateId($id, "ID de canción");
             Cancion::deleteCancion($id);
         }
         
@@ -118,10 +116,8 @@ class ControllerCancion extends BaseController
                 $genero = $this->getRequiredParameter("gen");
                 $album = $this->getRequiredParameter("alb");
                 
-                // Basic validation
-                if (strlen(trim($ncancion)) < 2) {
-                    $this->redirectWithError("El nombre de la canción debe tener al menos 2 caracteres");
-                }
+                // Validate inputs
+                $this->validateMinLength($ncancion, 2, "Nombre de canción");
                 
                 $cancion->setNcancion($ncancion);
                 $cancion->setGenero($genero);

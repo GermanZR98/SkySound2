@@ -33,15 +33,16 @@ class ControllerComentario extends BaseController
             $this->redirectWithError("ID de canción requerido");
         }
         
+        $this->validateId($idcancion, "ID de canción");
+        
         $comentarioText = $this->getParameter("com");
         
         if ($comentarioText) {
             $nombre = $this->getRequiredParameter("nom");
             
-            // Basic validation
-            if (strlen(trim($comentarioText)) < 2) {
-                $this->redirectWithError("El comentario debe tener al menos 2 caracteres");
-            }
+            // Validate inputs
+            $this->validateMinLength($comentarioText, 2, "Comentario");
+            $this->validateMinLength($nombre, 2, "Nombre");
 
             $comentario = new Comentario();
             $comentario->setComentario($comentarioText);
@@ -61,6 +62,7 @@ class ControllerComentario extends BaseController
         $id = $this->getParameter("idc");
         
         if ($id) {
+            $this->validateId($id, "ID de comentario");
             Comentario::deleteComentario($id);
         }
         
@@ -77,6 +79,7 @@ class ControllerComentario extends BaseController
         $id = $this->getParameter("idc");
         
         if ($id) {
+            $this->validateId($id, "ID de comentario");
             Comentario::deleteComentario($id);
         }
         
@@ -125,10 +128,8 @@ class ControllerComentario extends BaseController
             $comentarioText = $this->getParameter("com");
             
             if ($comentarioText) {
-                // Basic validation
-                if (strlen(trim($comentarioText)) < 2) {
-                    $this->redirectWithError("El comentario debe tener al menos 2 caracteres");
-                }
+                // Validate inputs
+                $this->validateMinLength($comentarioText, 2, "Comentario");
                 
                 $comentario->setComentario($comentarioText);
                 $comentario->update();

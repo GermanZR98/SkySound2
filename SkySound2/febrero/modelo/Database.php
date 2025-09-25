@@ -1,6 +1,7 @@
 <?php 
 
 require_once "config/Config.php";
+require_once "utils/ErrorHandler.php";
 
 class Database {
 
@@ -43,6 +44,7 @@ class Database {
             self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             
         } catch (Exception $e) {
+            ErrorHandler::logError("Database connection failed: " . $e->getMessage());
             die("**ERROR: es imposible conectar con la base de datos. Póngase en contacto con el administrador");
         }
     }
@@ -56,7 +58,7 @@ class Database {
 
             return ($flg) && (self::$prp->rowCount() > 0);
         } catch (PDOException $e) {
-            error_log("Database query error: " . $e->getMessage());
+            ErrorHandler::logError("Database query error: " . $e->getMessage(), ['sql' => $sql, 'params' => $params]);
             return false;
         }
     }
