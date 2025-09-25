@@ -1,8 +1,10 @@
 <?php  
-//iniciamos session
-$sesion=session_start();
-if (!isset($_SESSION["nombreusuario"])){
-	header("location: index.php");
+require_once "config/Config.php";
+
+// Initialize session
+session_start();
+if (!isset($_SESSION[Config::SESSION_NAME])) {
+    header("location: index.php");
 }
 ?>
 
@@ -20,7 +22,7 @@ if (!isset($_SESSION["nombreusuario"])){
 
     <h1>Añade la canción que quieras</h1>
 
-    <h3>Bienvenido: <?php echo $_SESSION["nombreusuario"]?></h3>
+    <h3>Bienvenido: <?php echo $_SESSION[Config::SESSION_NAME]?></h3>
 
     <?php
         foreach($datos as $item){

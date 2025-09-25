@@ -1,16 +1,16 @@
 <?php  
-//iniciamos session
-$sesion=session_start();
-$nombre = $_SESSION["nombreusuario"];
+require_once "config/Config.php";
 
-if ($nombre !== "admin"){
-	if (isset($nombre)) {
-		header("Location: index.php?mod=cancion&ope=index");
-	}
-}else{
-	if (isset($nombre)) {
-		header("Location: index.php?mod=cancion&ope=indexadmin");
-	}
+// Initialize session
+session_start();
+$nombre = $_SESSION[Config::SESSION_NAME] ?? null;
+
+if ($nombre) {
+    if (Config::isAdmin($nombre)) {
+        header("Location: index.php?mod=cancion&ope=indexadmin");
+    } else {
+        header("Location: index.php?mod=cancion&ope=index");
+    }
 }
 ?>
 
